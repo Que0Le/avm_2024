@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include",
+                "/usr/local/include",
+                "/usr/src/linux-headers-5.8.0-63-generic/include",
+                "/usr/src/linux-headers-5.8.0-63-generic/arch/x86/include",
+                "/usr/src/linux-hwe-5.8-headers-5.8.0-63/include",
+                "/usr/lib/gcc/x86_64-linux-gnu/9/include"
+            ],
+            "defines": [
+                "_POSIX_C_SOURCE=199309L",
+                "__GNUC__",
+                "__KERNEL__"
+            ],
+            // "cStandard": "c99",
+            // "compilerPath": "/usr/bin/clang",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
