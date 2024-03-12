@@ -9,15 +9,17 @@
 MODULE_LICENSE("Dual BSD/GPL");
 
 
-static unsigned char *internal_storage;
 
 
 static int my_init(void)
 {
     printk(KERN_ALERT "Module loaded!\n");
+    current_storage_pos = 0;
 
+    // alternatively, a larger memory area can be allocated with 
+    // (unsigned long *) __get_free_pages(GFP_KERNEL, PAGES_ORDER);
     internal_storage =
-	    (unsigned char *)kmalloc(BUFFER_SIZE * MAX_PKT, GFP_KERNEL);
+	    (unsigned char *)kmalloc(BUFFER_SIZE, GFP_KERNEL);
 
     /* Create proc file */
 	proc_create(PROC_FILENAME, 0, NULL, &pops);

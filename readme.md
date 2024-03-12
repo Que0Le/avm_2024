@@ -16,9 +16,15 @@ sudo apt-get install linux-image-generic
 ## Run
 
 ```bash
+# Monitor kernel log
 sudo dmesg -wH
 
+
 sudo insmod test.ko
+
+su -c 'echo '12345' >/proc/avm_proc_file'
+cat /proc/avm_proc_file
+
 sudo rmmod test.ko
 ```
 ## Misc
