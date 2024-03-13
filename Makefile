@@ -20,7 +20,7 @@ SRC = ./km/$(MODULE_NAME).c
 KERNEL_SRC_DIR ?= /lib/modules/$(shell uname -r)/build
 
 # Output directory
-OUTPUT_DIR ?= ./output/#$(MY_OUTPUT_DIR)/
+OUTPUT_DIR ?= .
 
 # Flags for the kernel module
 EXTRA_CFLAGS += -Werror

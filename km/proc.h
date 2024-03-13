@@ -88,6 +88,7 @@ static int open(struct inode *inode, struct file *filp)
 static ssize_t read(struct file *filp, char __user *buf, size_t len,
 		    loff_t *off)
 {
+	// TODO: cat cmd now keeps reading the file forever.
 	ssize_t ret;
 	ret = min(len, (size_t)BUFFER_SIZE - (size_t)*off);
 	pr_info("read: min(len, (size_t)BUFFER_SIZE - (size_t)*off) = %ld", ret);
