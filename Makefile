@@ -1,7 +1,7 @@
 # Makefile for compiling kernel module
 
 # Name of the kernel module
-MODULE_NAME = test
+MODULE_NAME = demo_module
 MY_OUTPUT_DIR = output
 
 ccflags-y := \

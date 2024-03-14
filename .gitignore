@@ -5,3 +5,4 @@
 *.ko
 test.mod.c
 *.symvers
+nss
