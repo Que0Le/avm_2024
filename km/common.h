@@ -25,7 +25,7 @@ static struct semaphore my_semaphore;
 static int str_to_linked_list(char *a, size_t n)
 {
 	char temp[128];
-	int word_head, word_tail = -1;
+	int word_head = -1, word_tail = -1;
 	int slice_now = 0;
 	for (int i = 0; i < n; i++) {
 		if (word_head == -1)

@@ -6,7 +6,7 @@
 int split_string_by_delimiters(char *a, size_t n)
 {
 	char temp[128];
-	int word_head, word_tail = -1;
+	int word_head = -1, word_tail = -1;
 	int slice_now = 0;
 	for (int i = 0; i < n; i++) {
 		if (word_head == -1)

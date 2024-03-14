@@ -31,4 +31,4 @@ sudo rmmod demo_module.ko
 ## Misc
 - Formatting with Clang format downloaded from kernel source code. Works well with `vscode`.
 - Get tickrate: `grep 'CONFIG_HZ=' /boot/config-$(uname -r)`
-- The split string algorithm can be tested by running `gcc napkin_string_split.c -o nss && ./nss`
+- The split string algorithm can be tested by running `gcc -g napkin_string_split.c -o nss && ./nss`. Check for mem leak: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./nss`.
