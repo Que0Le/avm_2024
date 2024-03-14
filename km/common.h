@@ -38,6 +38,31 @@ static int free_storage_nodes(struct list_head *lh) {
 	return 0;
 }
 
+static void print_all_nodes(struct list_head *lh) {
+	// Traverse the list and print the data
+	struct storage_node *entry;
+	printk(KERN_INFO "Linked list elements:\n");
+	list_for_each(lh, &storage_list) {
+		entry = list_entry(lh, struct storage_node, list);
+		printk(KERN_INFO "Word_th: %d, word: %s\n", entry->word_th,
+		       entry->word);
+	}
+}
+
+// static void pop_content_last_node(struct list_head *lh)
+// {
+// 	// Pop the last node
+// 	if (!list_empty(lh)) {
+// 		struct storage_list *last_node =
+// 			list_last_entry(lh, struct storage_list, list);
+// 		printk(KERN_INFO "Popped node (word_th %d): %s\n",
+// 		       last_node->word_th, last_node->word);
+// 		list_del(&last_node->list);
+// 		kfree(last_node->word);
+// 		kfree(last_node);
+// 	}
+// }
+
 static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 {
 	char temp[128];

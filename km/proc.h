@@ -95,14 +95,17 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 	ret = min(len, (size_t)BUFFER_SIZE - (size_t)*off);
 	pr_info("read: min(len, (size_t)BUFFER_SIZE - (size_t)*off) = %ld", ret);
 	
-	// Traverse the list and print the data
-	struct list_head *pos;
-	struct storage_node *entry;
-	printk(KERN_INFO "Linked list elements:\n");
-	list_for_each(pos, &storage_list) {
-		entry = list_entry(pos, struct storage_node, list);
-		printk(KERN_INFO "Word_th: %d, word: %s\n", entry->word_th,
-		       entry->word);
+	// Pop the last node
+	if (!list_empty(&storage_list)) {
+		struct storage_node *last_node =
+			list_last_entry(&storage_list, struct storage_node, list);
+		printk(KERN_INFO "Popped node (word_th %d): %s\n",
+		       last_node->word_th, last_node->word);
+		list_del(&last_node->list);
+		kfree(last_node->word);
+		kfree(last_node);
+	} else {
+		printk(KERN_INFO "List empty");
 	}
 	//
 
@@ -117,7 +120,6 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 
 	return ret;
 }
-
 
 static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		     loff_t *off)
@@ -143,10 +145,11 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		free_storage_nodes(&storage_list);
 		str_to_linked_list(&storage_list, internal_storage,
 				   current_storage_pos);
+		print_all_nodes(&storage_list);
 	}
-		return len;
-	}
+	return len;
 	// up(&my_semaphore);
+}
 
 static int release(struct inode *inode, struct file *filp)
 {

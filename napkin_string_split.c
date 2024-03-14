@@ -11,20 +11,21 @@ int split_string_by_delimiters(char *a, size_t n)
 	for (int i = 0; i < n; i++) {
 		if (word_head == -1)
 			word_head = i;
-		if (a[i] == ' ' | a[i] == ',' | a[i] == ';' | a[i] == ':' | a[i] == '\n') {
+		if (a[i] == ' ' | a[i] == ',' | a[i] == ';' | a[i] == ':' |
+		    a[i] == '\n') {
 			// if we read a delimeter we reached the possible end of a word
 			if (word_tail == -1) {
 				// ... except multiple non-word chars
 				word_head = -1;
 				continue;
 			} else {
-                // ... signal slicing
+				// ... signal slicing
 				slice_now = 1;
 			}
 		} else {
 			word_tail = i;
 		}
-        // handle slicing in case of being signaled, 
+		// handle slicing in case of being signaled,
 		// or we reached the end of string
 		if (slice_now | i + 1 == n) {
 			printf("head %d tail %d\n", word_head, word_tail);
@@ -33,7 +34,7 @@ int split_string_by_delimiters(char *a, size_t n)
 			printf("%s\n", temp);
 			word_tail = -1;
 			word_head = -1;
-            slice_now = 0;
+			slice_now = 0;
 		}
 	}
 	return 0;
