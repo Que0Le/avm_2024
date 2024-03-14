@@ -94,6 +94,18 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 	ssize_t ret;
 	ret = min(len, (size_t)BUFFER_SIZE - (size_t)*off);
 	pr_info("read: min(len, (size_t)BUFFER_SIZE - (size_t)*off) = %ld", ret);
+	
+	// Traverse the list and print the data
+	struct list_head *pos;
+	struct storage_node *entry;
+	printk(KERN_INFO "Linked list elements:\n");
+	list_for_each(pos, &storage_list) {
+		entry = list_entry(pos, struct storage_node, list);
+		printk(KERN_INFO "Word_th: %d, word: %s\n", entry->word_th,
+		       entry->word);
+	}
+	//
+
 	if (copy_to_user(buf, internal_storage, ret)) {
 		// unsigned long __copy_to_user (void __user * to,const void * from,unsigned long n);
 		// Returns number of bytes that could not be copied. On success, this will be zero.
@@ -128,7 +140,9 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		return -EFAULT;
 	} else {
 		current_storage_pos = temp_len;
-		str_to_linked_list(internal_storage, current_storage_pos);
+		free_storage_nodes(&storage_list);
+		str_to_linked_list(&storage_list, internal_storage,
+				   current_storage_pos);
 	}
 		return len;
 	}

@@ -6,3 +6,4 @@
 test.mod.c
 *.symvers
 nss
+demo_module.mod.c
