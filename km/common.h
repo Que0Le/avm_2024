@@ -10,6 +10,8 @@
 #define DEBUG_READ_FROM_US 1
 #define LOG_PROC_FILE_PREFIX "AVM: Proc-file"
 
+#define MAX_TRY_ACQUIRE_LOCK 5
+
 static unsigned char *internal_storage;
 // the current text's length that is stored internally
 static size_t storage_len;

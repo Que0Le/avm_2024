@@ -22,7 +22,7 @@ sudo insmod demo_module.ko
 lsmod | grep demo_module 
 /sbin/modinfo demo_module.ko
 
-sudo sh -c "echo 'w1 w2 w3 w4' >/proc/avm_proc_file"
+sudo sh -c "echo ' w1 w2 ,  w3 w4 w5' >/proc/avm_proc_file"
 cat /proc/avm_proc_file
 dd bs=20 count=1 < /proc/avm_proc_file
 

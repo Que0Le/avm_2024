@@ -65,7 +65,7 @@ static int open(struct inode *inode, struct file *filp)
 {
 	struct mmap_info *info;
 
-	pr_info("%s opened\n", LOG_PROC_FILE_PREFIX);
+	// pr_info("%s opened\n", LOG_PROC_FILE_PREFIX);
 	info = kmalloc(sizeof(struct mmap_info), GFP_KERNEL);
 	// pr_info("virt_to_phys = 0x%llx\n",
 	// 	(unsigned long long)virt_to_phys((void *)info));
@@ -90,6 +90,11 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 	// TODO: cat cmd now keeps reading the file forever.
 	// TODO: use wait_for_completion(&comp) to wait for reading the list
 	ssize_t ret;
+
+	if (down_interruptible(&my_semaphore)) {
+		printk(KERN_ALERT "Interrupted down_interruptible");
+		return (-EINTR);
+	}
 	ret = min(len, storage_len - (size_t)*off);
 	pr_info("to read (%ld): len (%ld) "
 		"(storage_len - (size_t)*off) (%ld) ",
@@ -101,6 +106,7 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 	} else {
 		printk(KERN_INFO "copy_to_user done!!!\n");
 	}
+	up(&my_semaphore);
 
 	return ret;
 }
@@ -120,8 +126,12 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	// 	return len;
 	// }
 
-	// TODO: lock internal_storage and current_storage_pos
 	// size_t temp_len = min(len, (size_t)BUFFER_SIZE);
+	if (down_interruptible(&my_semaphore)) {
+		printk(KERN_ALERT "Interrupted down_interruptible");
+		return(-EINTR); 
+	}
+	// Clean up data from old write
 	kfree(internal_storage);
 	storage_len = 0;
 	word_index_to_read = 0;
@@ -132,29 +142,30 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		       len);
 		return -ENOMEM;
 	}
-
-	// down_interruptible(&my_semaphore);
+	// Copy data from user and stored in storage
 	if (copy_from_user(internal_storage, buf, len)) {
 		printk(KERN_ERR "Failed copy_from_user!!!");
 		kfree(internal_storage);
+		up(&my_semaphore);
 		return -EFAULT;
 	} else {
 		storage_len = len;
 		free_storage_nodes(&storage_list);
-		total_word_count = str_to_linked_list(&storage_list, internal_storage,
-				   storage_len);
+		total_word_count = str_to_linked_list(
+			&storage_list, internal_storage, storage_len);
 		// Visual check
 		print_all_nodes(&storage_list);
 	}
+	up(&my_semaphore);
+
 	return len;
-	// up(&my_semaphore);
 }
 
 static int release(struct inode *inode, struct file *filp)
 {
 	struct mmap_info *info;
 
-	pr_info("%s released\n", LOG_PROC_FILE_PREFIX);
+	// pr_info("%s released\n", LOG_PROC_FILE_PREFIX);
 	info = filp->private_data;
 	free_page((unsigned long)info->data);
 	kfree(info);
