@@ -29,6 +29,7 @@ dd bs=20 count=1 < /proc/avm_proc_file
 sudo rmmod demo_module.ko
 ```
 ## Misc
-- Formatting with Clang format downloaded from kernel source code. Works well with `vscode`.
-- Get tickrate: `grep 'CONFIG_HZ=' /boot/config-$(uname -r)`
+- At least 10 times VM must be force-restarted during development.
 - The split string algorithm can be tested by running `gcc -g napkin_string_split.c -o nss && ./nss`. Check for mem leak: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./nss`.
+- Formatting with Clang format downloaded from kernel source code. Works well with `vscode` on `macOS` using `cmd + K` `cmd + F`.
+- Get tickrate: `grep 'CONFIG_HZ=' /boot/config-$(uname -r)`

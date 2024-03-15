@@ -13,19 +13,9 @@
 #include <linux/string.h>
 #include "./common.h"
 
-// static unsigned long *log_buffs[NUM_LOG_BUFF];
-
 struct mmap_info {
 	char *data;
 };
-
-// static unsigned char *buff_from_here;
-// static unsigned char *buff_temp;
-// unsigned int current_index = 0; // index of (should be) next free cell
-// int status[MAX_PKT] = { 0 };
-
-// unsigned long count_pkt = 0;
-// unsigned long count_pkt_overflow = 0;
 
 /* After unmap. */
 static void vm_close(struct vm_area_struct *vma)
@@ -89,29 +79,23 @@ static int open(struct inode *inode, struct file *filp)
 static ssize_t read(struct file *filp, char __user *buf, size_t len,
 		    loff_t *off)
 {
+	if (!internal_storage || storage_len == 0) {
+		printk(KERN_INFO "read empty");
+		// TODO; NOT WORKING!
+		char message[] = "<empty_buffer>";
+		copy_to_user(buf, message,
+			     15);
+		return 0;
+	}
 	// TODO: cat cmd now keeps reading the file forever.
 	// TODO: use wait_for_completion(&comp) to wait for reading the list
 	ssize_t ret;
-	ret = min(len, (size_t)BUFFER_SIZE - (size_t)*off);
-	pr_info("read: min(len, (size_t)BUFFER_SIZE - (size_t)*off) = %ld", ret);
-	
-	// Pop the last node
-	if (!list_empty(&storage_list)) {
-		struct storage_node *last_node =
-			list_last_entry(&storage_list, struct storage_node, list);
-		printk(KERN_INFO "Popped node (word_th %d): %s\n",
-		       last_node->word_th, last_node->word);
-		list_del(&last_node->list);
-		kfree(last_node->word);
-		kfree(last_node);
-	} else {
-		printk(KERN_INFO "List empty");
-	}
-	//
+	ret = min(len, storage_len - (size_t)*off);
+	pr_info("to read (%ld): len (%ld) "
+		"(storage_len - (size_t)*off) (%ld) ",
+		ret, len, storage_len - (size_t)*off);
 
 	if (copy_to_user(buf, internal_storage, ret)) {
-		// unsigned long __copy_to_user (void __user * to,const void * from,unsigned long n);
-		// Returns number of bytes that could not be copied. On success, this will be zero.
 		printk(KERN_ERR "copy_to_user failed!!!\n");
 		ret = -EFAULT;
 	} else {
@@ -124,6 +108,7 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		     loff_t *off)
 {
+	// TODO: handle empty string
 	struct mmap_info *info;
 
 	pr_info("Handling write-to-proc-file\n");
@@ -136,15 +121,29 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	// }
 
 	// TODO: lock internal_storage and current_storage_pos
-	size_t temp_len = min(len, (size_t)BUFFER_SIZE);
+	// size_t temp_len = min(len, (size_t)BUFFER_SIZE);
+	kfree(internal_storage);
+	storage_len = 0;
+	word_index_to_read = 0;
+	internal_storage = (unsigned char *)kmalloc(len, GFP_KERNEL);
+	if (!internal_storage) {
+		printk(KERN_ERR
+		       "Failed allocate %ld bytes for user string!!!\n",
+		       len);
+		return -ENOMEM;
+	}
+
 	// down_interruptible(&my_semaphore);
-	if (copy_from_user(internal_storage, buf, temp_len)) {
+	if (copy_from_user(internal_storage, buf, len)) {
+		printk(KERN_ERR "Failed copy_from_user!!!");
+		kfree(internal_storage);
 		return -EFAULT;
 	} else {
-		current_storage_pos = temp_len;
+		storage_len = len;
 		free_storage_nodes(&storage_list);
-		str_to_linked_list(&storage_list, internal_storage,
-				   current_storage_pos);
+		total_word_count = str_to_linked_list(&storage_list, internal_storage,
+				   storage_len);
+		// Visual check
 		print_all_nodes(&storage_list);
 	}
 	return len;

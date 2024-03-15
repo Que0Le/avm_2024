@@ -12,7 +12,9 @@
 
 static unsigned char *internal_storage;
 // the current text's length that is stored internally
-static size_t current_storage_pos;
+static size_t storage_len;
+static size_t total_word_count = 0;
+static int word_index_to_read = 0;
 
 static struct semaphore my_semaphore;
 
@@ -69,6 +71,7 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 	int word_head = -1, word_tail = -1;
 	int slice_now = 0;
 	int count = 0;
+	int word_count = 0;
 	for (int i = 0; i < n; i++) {
 		if (word_head == -1)
 			word_head = i;
@@ -89,6 +92,7 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 		// handle slicing in case of being signaled,
 		// or we reached the end of string
 		if (slice_now || (i + 1 == n)) {
+			word_count += 1;
 			size_t len = min(127, word_tail - word_head + 1);
 			printk(KERN_INFO "head %d tail %d\n", word_head,
 			       word_tail);
@@ -120,7 +124,7 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 			slice_now = 0;
 		}
 	}
-	return 0;
+	return word_count;
 }
 
 #endif

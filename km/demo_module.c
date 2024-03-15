@@ -28,9 +28,24 @@ static struct timer_list my_timer;
 
 static void my_timer_callback(struct timer_list *t)
 {
-	printk(KERN_INFO "Timer callback: Running task every %d miliseconds\n",
-	       BACKGROUND_SLEEP_INTERVAL);
-
+	struct storage_node *entry;
+	int i = 0;
+	if (list_empty(&storage_list)) {
+		printk(KERN_INFO "Timer callback (%d ms): <empty storage>",
+		       BACKGROUND_SLEEP_INTERVAL);
+	}
+	list_for_each_entry(entry, &storage_list, list) {
+		if (i == word_index_to_read) {
+			word_index_to_read = (word_index_to_read + 1) % total_word_count;
+			printk(KERN_INFO "Timer callback (%d ms): "
+					"Word_th (%d) = ### %s ###",
+				BACKGROUND_SLEEP_INTERVAL, entry->word_th, entry->word);
+			break;
+		}
+		i++;
+	}
+	// Setup timer for next round.
+	// TODO: not sure if there is one-time way to accomplish this
 	mod_timer(&my_timer,
 		  jiffies + msecs_to_jiffies(BACKGROUND_SLEEP_INTERVAL));
 }
@@ -47,11 +62,10 @@ static int my_init(void)
 
 	printk(KERN_INFO "The process is \"%s\" (pid %i)\n", current->comm,
 	       current->pid);
-	current_storage_pos = 0;
+	storage_len = 0;
 
 	// alternatively, a larger memory area can be allocated with
 	// (unsigned long *) __get_free_pages(GFP_KERNEL, PAGES_ORDER);
-	internal_storage = (unsigned char *)kmalloc(BUFFER_SIZE, GFP_KERNEL);
 
 	sema_init(&my_semaphore, 1);
 
@@ -87,4 +101,4 @@ module_exit(my_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Que0Le");
-MODULE_DESCRIPTION("Demo Module: an example module built for demonstrating purpose");
+MODULE_DESCRIPTION("Demo Module: built for demonstrating purpose");
