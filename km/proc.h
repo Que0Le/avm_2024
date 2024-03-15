@@ -39,7 +39,6 @@ static vm_fault_t vm_fault(struct vm_fault *vmf)
 	return 0;
 }
 
-/* After mmap. TODO vs mmap, when can this happen at a different time than mmap? */
 static void vm_open(struct vm_area_struct *vma)
 {
 	pr_info("vm_open\n");
@@ -63,16 +62,10 @@ static int mmap(struct file *filp, struct vm_area_struct *vma)
 
 static int open(struct inode *inode, struct file *filp)
 {
-	struct mmap_info *info;
-
-	// pr_info("%s opened\n", LOG_PROC_FILE_PREFIX);
-	info = kmalloc(sizeof(struct mmap_info), GFP_KERNEL);
-	// pr_info("virt_to_phys = 0x%llx\n",
-	// 	(unsigned long long)virt_to_phys((void *)info));
-	info->data = (char *)get_zeroed_page(GFP_KERNEL);
-	// info->data = buff_from_here;
-	memcpy(info->data, "asdf", 4);
-	filp->private_data = info;
+	// struct mmap_info *info;
+	// info = kmalloc(sizeof(struct mmap_info), GFP_KERNEL);
+	// info->data = (char *)get_zeroed_page(GFP_KERNEL);
+	// filp->private_data = info;
 	return 0;
 }
 
@@ -83,12 +76,11 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 		printk(KERN_INFO "read empty");
 		// TODO; NOT WORKING!
 		char message[] = "<empty_buffer>";
-		copy_to_user(buf, message,
-			     15);
+		if (copy_to_user(buf, message, 15))
+
 		return 0;
 	}
 	// TODO: cat cmd now keeps reading the file forever.
-	// TODO: use wait_for_completion(&comp) to wait for reading the list
 	ssize_t ret;
 
 	if (down_interruptible(&my_semaphore)) {
@@ -115,20 +107,13 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		     loff_t *off)
 {
 	// TODO: handle empty string
-	struct mmap_info *info;
+	// struct mmap_info *info;
+	// info = filp->private_data;
 
 	pr_info("Handling write-to-proc-file\n");
-	info = filp->private_data;
 
-	// if (copy_from_user(info->data, buf, min(len, (size_t)BUFFER_SIZE))) {
-	// 	return -EFAULT;
-	// } else {
-	// 	return len;
-	// }
-
-	// size_t temp_len = min(len, (size_t)BUFFER_SIZE);
 	if (down_interruptible(&my_semaphore)) {
-		printk(KERN_ALERT "Interrupted down_interruptible");
+		printk(KERN_ALERT "Failed acquiring lock for writing!!!");
 		return(-EINTR); 
 	}
 	// Clean up data from old write
@@ -163,13 +148,11 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 
 static int release(struct inode *inode, struct file *filp)
 {
-	struct mmap_info *info;
-
-	// pr_info("%s released\n", LOG_PROC_FILE_PREFIX);
-	info = filp->private_data;
-	free_page((unsigned long)info->data);
-	kfree(info);
-	filp->private_data = NULL;
+	// struct mmap_info *info;
+	// info = filp->private_data;
+	// free_page((unsigned long)info->data);
+	// kfree(info);
+	// filp->private_data = NULL;
 	return 0;
 }
 
