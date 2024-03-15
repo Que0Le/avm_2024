@@ -11,21 +11,11 @@
 
 #define PROC_FILENAME "avm_proc_file"
 
-static s64 ms_since_boot(void)
-{
-	ktime_t boottime;
-	s64 boottime_ns;
-	unsigned long long boottime_ms;
-
-	boottime = ktime_get_boottime();
-	boottime_ns = ktime_to_ns(boottime);
-	boottime_ms = boottime_ns / 1000000ULL;
-
-	return boottime_ms;
-}
-
 static struct timer_list my_timer;
 
+/**
+ * Print word to kernel log and setup timer for next round
+*/
 static void my_timer_callback(struct timer_list *t)
 {
 	struct storage_node *entry;
@@ -63,30 +53,18 @@ set_new_timer:
 
 static int my_init(void)
 {
-	printk(KERN_ALERT "Module loaded!\n");
-	////
-	printk(KERN_INFO "Boot time since system boot: %llu ms\n",
-	       ms_since_boot());
-	////
-
-	printk(KERN_INFO "The process is \"%s\" (pid %i)\n", current->comm,
-	       current->pid);
-	storage_len = 0;
-
-	// alternatively, a larger memory area can be allocated with
-	// (unsigned long *) __get_free_pages(GFP_KERNEL, PAGES_ORDER);
+	printk(KERN_ALERT "Demo Module loaded!\n");
 
 	sema_init(&my_semaphore, 1);
-
-	/* Create proc file */
 	proc_create(PROC_FILENAME, 0, NULL, &pops);
+	printk(KERN_INFO "Proc file '%s' initialized\n", PROC_FILENAME);
 
-	// Initialize the timer
+	// Initialize the timer and callback
 	timer_setup(&my_timer, my_timer_callback, 0);
 	mod_timer(&my_timer,
 		  jiffies + msecs_to_jiffies(BACKGROUND_SLEEP_INTERVAL));
-
 	printk(KERN_INFO "Timer initialized\n");
+
 	return 0;
 }
 

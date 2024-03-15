@@ -14,7 +14,7 @@
 
 static unsigned char *internal_storage;
 // the current text's length that is stored internally
-static size_t storage_len;
+static size_t storage_len = 0;
 static size_t total_word_count = 0;
 static int word_index_to_read = 0;
 
