@@ -45,10 +45,13 @@ int split_string_by_delimiters(char *a, size_t n)
 
 int main()
 {
-	char s[] = "  , word1, word2 word3 \n word4 , ";
-	printf("strlen %ld: \n###\n%s\n###\n", strlen(s), s);
-	split_string_by_delimiters(s, strlen(s));	
+	char s1[] = "";
+	printf("strlen %ld: \n###\n%s\n###\n", strlen(s1), s1);
+	split_string_by_delimiters(s1, strlen(s1));
 	char s2[] = "  ,  \n , ";
 	printf("strlen %ld: \n###\n%s\n###\n", strlen(s2), s2);
 	split_string_by_delimiters(s2, strlen(s2));
+	char s3[] = "  , word1, word2 word3 \n word4 , ";
+	printf("strlen %ld: \n###\n%s\n###\n", strlen(s3), s3);
+	split_string_by_delimiters(s3, strlen(s3));	
 }

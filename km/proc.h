@@ -17,10 +17,13 @@ struct mmap_info {
 	char *data;
 };
 
-/* After unmap. */
+/* 
+* These vm_ functions were copied from other project. 
+* Not sure which purpose they serve
+*/
 static void vm_close(struct vm_area_struct *vma)
 {
-	pr_info("vm_close\n");
+	pr_info("vm_close");
 }
 
 /* First page access. */
@@ -29,7 +32,7 @@ static vm_fault_t vm_fault(struct vm_fault *vmf)
 	struct page *page;
 	struct mmap_info *info;
 
-	pr_info("vm_fault\n");
+	pr_info("vm_fault");
 	info = (struct mmap_info *)vmf->vma->vm_private_data;
 	if (info->data) {
 		page = virt_to_page(info->data);
@@ -41,7 +44,7 @@ static vm_fault_t vm_fault(struct vm_fault *vmf)
 
 static void vm_open(struct vm_area_struct *vma)
 {
-	pr_info("vm_open\n");
+	pr_info("vm_open");
 }
 
 static struct vm_operations_struct vm_ops = {
@@ -52,7 +55,7 @@ static struct vm_operations_struct vm_ops = {
 
 static int mmap(struct file *filp, struct vm_area_struct *vma)
 {
-	pr_info("mmap\n");
+	pr_info("mmap");
 	vma->vm_ops = &vm_ops;
 	vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP;
 	vma->vm_private_data = filp->private_data;
@@ -69,15 +72,16 @@ static int open(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+/**
+ * Executed when proc file is read from by userspace
+*/
 static ssize_t read(struct file *filp, char __user *buf, size_t len,
 		    loff_t *off)
 {
-	if (!internal_storage || storage_len == 0) {
-		printk(KERN_INFO "read empty");
-		// TODO; NOT WORKING!
-		char message[] = "<empty_buffer>";
-		if (copy_to_user(buf, message, 15))
+	pr_info("READ: User is reading %ld bytes", len);
 
+	if (!internal_storage || storage_len == 0) {
+		printk(KERN_INFO "... storage empty");
 		return 0;
 	}
 	// TODO: cat cmd now keeps reading the file forever.
@@ -88,21 +92,25 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 		return (-EINTR);
 	}
 	ret = min(len, storage_len - (size_t)*off);
-	pr_info("to read (%ld): len (%ld) "
+	pr_info("... Calculate bytes to read %ld: len (%ld) "
 		"(storage_len - (size_t)*off) (%ld) ",
 		ret, len, storage_len - (size_t)*off);
 
 	if (copy_to_user(buf, internal_storage, ret)) {
-		printk(KERN_ERR "copy_to_user failed!!!\n");
+		printk(KERN_ERR "copy_to_user failed!!!");
 		ret = -EFAULT;
 	} else {
-		printk(KERN_INFO "copy_to_user done!!!\n");
+		printk(KERN_INFO "copy_to_user done!!!");
 	}
 	up(&my_semaphore);
 
 	return ret;
 }
 
+/**
+ * Executed when proc file is write to from userspace.
+ * "len" includes null char
+*/
 static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		     loff_t *off)
 {
@@ -110,20 +118,21 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	// struct mmap_info *info;
 	// info = filp->private_data;
 
-	pr_info("Handling write-to-proc-file\n");
+	// TODO: we assume that no malicious char is entered
+	pr_info("WRITE: User has written %ld bytes: %s", len - 1, buf);
 
 	if (down_interruptible(&my_semaphore)) {
 		printk(KERN_ALERT "Failed acquiring lock for writing!!!");
 		return(-EINTR); 
 	}
-	// Clean up data from old write
+	// Clean up data from last write
 	kfree(internal_storage);
 	storage_len = 0;
 	word_index_to_read = 0;
 	internal_storage = (unsigned char *)kmalloc(len, GFP_KERNEL);
 	if (!internal_storage) {
 		printk(KERN_ERR
-		       "Failed allocate %ld bytes for user string!!!\n",
+		       "Failed allocate %ld bytes for user string!!!",
 		       len);
 		return -ENOMEM;
 	}

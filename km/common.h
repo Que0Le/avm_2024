@@ -6,10 +6,6 @@
 #include <linux/slab.h>
 
 #define BACKGROUND_SLEEP_INTERVAL 1000
-#define BUFFER_SIZE 128
-#define DEBUG_READ_FROM_US 1
-#define LOG_PROC_FILE_PREFIX "AVM: Proc-file"
-
 #define MAX_TRY_ACQUIRE_LOCK 5
 
 static unsigned char *internal_storage;
@@ -45,10 +41,10 @@ static int free_storage_nodes(struct list_head *lh) {
 static void print_all_nodes(struct list_head *lh) {
 	// Traverse the list and print the data
 	struct storage_node *entry;
-	printk(KERN_INFO "Linked list elements:\n");
+	printk(KERN_INFO "Linked list elements:");
 	list_for_each(lh, &storage_list) {
 		entry = list_entry(lh, struct storage_node, list);
-		printk(KERN_INFO "Word_th: %d, word: %s\n", entry->word_th,
+		printk(KERN_INFO "... word_th: %d, word: %s", entry->word_th,
 		       entry->word);
 	}
 }
@@ -59,7 +55,7 @@ static void print_all_nodes(struct list_head *lh) {
 // 	if (!list_empty(lh)) {
 // 		struct storage_list *last_node =
 // 			list_last_entry(lh, struct storage_list, list);
-// 		printk(KERN_INFO "Popped node (word_th %d): %s\n",
+// 		printk(KERN_INFO "Popped node (word_th %d): %s",
 // 		       last_node->word_th, last_node->word);
 // 		list_del(&last_node->list);
 // 		kfree(last_node->word);
@@ -96,20 +92,20 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 		if (slice_now || (i + 1 == n)) {
 			word_count += 1;
 			size_t len = min(127, word_tail - word_head + 1);
-			printk(KERN_INFO "head %d tail %d\n", word_head,
-			       word_tail);
+			// printk(KERN_INFO "head %d tail %d", word_head,
+			//        word_tail);
 			memcpy(&temp, &a[word_head], len);
 			temp[len] = '\0';
-			printk(KERN_INFO "%s\n", temp);
+			// printk(KERN_INFO "%s", temp);
 			//
 			struct storage_node *node = kmalloc(sizeof(*node), GFP_KERNEL);
 			if (!node) {
-				printk(KERN_ERR "Failed to allocate memory for node!\n");
+				printk(KERN_ERR "Failed to allocate memory for node!");
 				return -ENOMEM;
 			}
 			node->word = kmalloc(len + 1, GFP_KERNEL);
 			if (!node->word) {
-				printk(KERN_ERR "Failed to allocate memory for word '%s'!\n", temp);
+				printk(KERN_ERR "Failed to allocate memory for word '%s'!", temp);
 				return -ENOMEM;
 			}
 			memcpy(node->word, &a[word_head], len);

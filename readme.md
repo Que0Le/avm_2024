@@ -21,8 +21,9 @@ We also implement a very simple function to extract words from raw string (`comm
 
 
 A few observation while developing and testing the software:
+- A newline char is needed to print the last line before the module is removed. I.e: `printk(KERN_ALERT "Module unloaded!\n");`. Otherwise, that `Module unloaded!` text will only show up when another kernel log is printed! [Intersting read](https://lwn.net/Articles/732420/).
 - Expected crashes: At least 10 times the VM must be force-restarted during development. In most cases, invalid memory access was to be blamed.
-- Although its quite complicated to prove in a VM environment on a busy workstation, the timestamps of lock and non-lock tests indicate inaccurate timer on the locked-version. This can most likely be explained by our incorrect implementation, or the busy and obsolete host machine, or a combination of both. That being said, a large amount of callbacks seems to still wake up in time.
+- Although its quite complicated to prove in a VM environment on a busy workstation, the timestamps of lock and non-lock tests indicate inaccurate timer on the locked-version. This can most likely be explained by our incorrect implementation, or the busy and obsolete host machine, or a combination of both. That being said, **a large amount of callbacks seems to still wake up in time and the timer becomes more accurate over time**. The following log fractions reflect an abnormal performance period:
 
     <details>
     <summary>No lock</summary>
@@ -122,7 +123,8 @@ A few observation while developing and testing the software:
 We tested and developed the software on a x86 VM using VSCode remote development extension. 
 
 ```bash
-# VirtualBox macOS Intel Version 7.0.14 r161095 (Qt5.15.2)
+# Host: Macbook Pro 2016 (x86 Intel)
+# VirtualBox Version 7.0.14 r161095 (Qt5.15.2)
 lsb_release -a
 # Distributor ID: Ubuntu
 # Description:    Ubuntu 20.04.6 LTS

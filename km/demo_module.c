@@ -53,34 +53,34 @@ set_new_timer:
 
 static int my_init(void)
 {
-	printk(KERN_ALERT "Demo Module loaded!\n");
+	printk(KERN_ALERT "Demo Module loaded!");
 
 	sema_init(&my_semaphore, 1);
 	proc_create(PROC_FILENAME, 0, NULL, &pops);
-	printk(KERN_INFO "Proc file '%s' initialized\n", PROC_FILENAME);
+	printk(KERN_INFO "Proc file '%s' initialized", PROC_FILENAME);
 
 	// Initialize the timer and callback
 	timer_setup(&my_timer, my_timer_callback, 0);
 	mod_timer(&my_timer,
 		  jiffies + msecs_to_jiffies(BACKGROUND_SLEEP_INTERVAL));
-	printk(KERN_INFO "Timer initialized\n");
+	printk(KERN_INFO "Timer initialized");
 
 	return 0;
 }
 
 static void my_exit(void)
 {
-	printk(KERN_ALERT "Module is being unloaded ...!\n");
+	printk(KERN_ALERT "Module is being unloaded ...!");
 	int ret;
 	for (int i = 0; i < MAX_TRY_ACQUIRE_LOCK; i++) {
 		ret = down_interruptible(&my_semaphore);
 		if (ret) {
 			if (i + 1 == MAX_TRY_ACQUIRE_LOCK) {
 				printk(KERN_INFO
-				       "... Forcing clear resources ...");
+				       "... Forcing resources clearing ...");
 			} else {
 				printk(KERN_INFO
-				       "... Waiting for clearing resources ...");
+				       "... Waiting to clear resources ...");
 			}
 		} else {
 			printk(KERN_INFO "... Clearing resources ...");
@@ -89,11 +89,13 @@ static void my_exit(void)
 	}
 
 	remove_proc_entry(PROC_FILENAME, NULL);
-
+	printk(KERN_INFO "... removed proc file ...");
 	free_storage_nodes(&storage_list);
-
+	printk(KERN_INFO "... removed word list ...");
 	del_timer(&my_timer);
+	printk(KERN_INFO "... deleted timer ...");
 	kfree(internal_storage);
+	printk(KERN_INFO "... removed storage ...");
 	up(&my_semaphore);
 
 	printk(KERN_ALERT "Module unloaded!\n");
