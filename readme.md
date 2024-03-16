@@ -8,21 +8,77 @@ The kernel module has the following tasks:
 
 - Create a proc file (`/proc/avm_procfile`) for exchanging data between the module and userspace.
 - Handle data written to the proc file [a]: 
-    - Raw string is stored in a dynamically allocated memory area (`internal_storage`).
-    - The words will be extracted from the string and stored in a linked list (`storage_list`). See function `proc.h->write()`.
+    - Raw string is stored in a dynamically allocated memory area (`char *internal_storage`).
+    - The words will be extracted from the string and stored in a linked list (`struct list_head storage_list`). See function `proc.h->write()`.
 - Handle reading data from the proc file [b]: 
     - Return the raw string to user. If no user input has been provided, nothing will be returned (WIP). See function `proc.h->read()`.
-- Create a timer with `mod_timer` (timeout in ms `BACKGROUND_SLEEP_INTERVAL`) to print the next word in the linked list `storage_list` [c]. The next word is selected by reading the word at index `word_index_to_read` and increase it after reading. See `demo_module.c->my_timer_callback()` function.
+- Create a timer with `mod_timer` (timeout in ms `BACKGROUND_SLEEP_INTERVAL`) to print the next word in the linked list `storage_list` [c]. The next word is selected by reading the list at index `word_index_to_read` and increase this var after reading. See `demo_module.c->my_timer_callback()` function.
 - Protect internal storage with `semaphore`.
 
 To have access to the data (words and raw string), a process has to acquire a lock (my_semaphore). Although each of the tasks [a] [b] and [c] has different access requirement, they share the same lock. This is because the words (in linked list) and raw string (in allocated memory) must be kept in sync. We do not want to have the timer process print `w1` while the raw string has already been updated from `w1 w2` to `newword1 newword2`.
 
-We also implement a very simple function to extract words from raw string (`common.h->str_to_linked_list()`). This function scans the raw string and marks the beginning and end indices of each word, one by one. The end of a word is defined as the existence of certain characters, i.e. ` `, `,`, `;`. The  algorithm can be tested by running `gcc -g napkin_string_split.c -o nss && ./nss`. To check for mem leak: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./nss`.
+We also implement a very simple function to extract words from raw string (`common.h->str_to_linked_list()`). This function scans the raw string and marks the beginning and end indices of each word, one by one. The end of a word is defined as the existence of certain characters, i.e. `<space>`, `,`, `;`. The  algorithm can be tested by running `gcc -g napkin_string_split.c -o nss && ./nss`. To check for mem leak: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./nss`. This implementation can be vastly improved (ASCII conversion, error checking, replacing special characters with underscores, etc.); nonetheless, it is deemed sufficient for this project.
 
 
 A few observation while developing and testing the software:
 - A newline char is needed to print the last line before the module is removed. I.e: `printk(KERN_ALERT "Module unloaded!\n");`. Otherwise, that `Module unloaded!` text will only show up when another kernel log is printed! [Intersting read](https://lwn.net/Articles/732420/).
 - Expected crashes: At least 10 times the VM must be force-restarted during development. In most cases, invalid memory access was to be blamed.
+- Reading proc file with `cat` command will drive the module to the limit since the command tries to read the whole 131072 bytes at one time. This makes the module respond non-stop, each run returns 30 bytes. The locking mechanism seems to work, like in this case:
+
+    <details>
+    <summary>Kernel log during "cat" command (extracted from "/var/log/kern.log")</summary>
+
+    ```properties
+    Mar 16 07:28:12 u20 kernel: [ 8851.397166] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397167] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397168] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397171] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397172] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397173] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397176] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397177] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397178] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397181] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397182] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397183] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397186] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397188] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397188] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397192] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397193] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397193] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397197] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397198] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397198] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397202] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.397203] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.397203] copy_to_user done!!!
+    Mar 16 07:28:12 u20 kernel: [ 8851.397207] READ: User is reading 131072 bytes
+    Mar 16 07:28:12 u20 kernel: [ 8851.409652] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:12 u20 kernel: [ 8851.410512] copy_to_user done!!!
+    Mar 16 07:28:14 u20 kernel: [ 8851.553744] Timer callback (1000 ms): Word_th (0) = ### w1 ###
+    Mar 16 07:28:15 u20 kernel: [ 8852.858279] Timer callback (1000 ms): Word_th (1) = ### w2 ###
+    Mar 16 07:28:17 u20 kernel: [ 8854.316561] Timer callback (1000 ms): Word_th (2) = ### w3 ###
+    Mar 16 07:28:20 u20 kernel: [ 8856.336310] Timer callback (1000 ms): Word_th (3) = ### w4 ###
+    Mar 16 07:28:23 u20 kernel: [ 8859.008901] Timer callback (1000 ms): Word_th (4) = ### w5 ###
+    Mar 16 07:28:24 u20 kernel: [ 8861.893008] Timer callback (1000 ms): Word_th (5) = ### w1234567 ###
+    Mar 16 07:28:25 u20 kernel: [ 8863.078735] Timer callback (1000 ms): Word_th (0) = ### w1 ###
+    Mar 16 07:28:25 u20 kernel: [ 8864.104631] Timer callback (1000 ms): Word_th (1) = ### w2 ###
+    Mar 16 07:28:25 u20 kernel: [ 8864.122185] READ: User is reading 131072 bytes
+    Mar 16 07:28:25 u20 kernel: [ 8864.122188] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:25 u20 kernel: [ 8864.122192] copy_to_user done!!!
+    Mar 16 07:28:25 u20 kernel: [ 8864.122227] READ: User is reading 131072 bytes
+    Mar 16 07:28:25 u20 kernel: [ 8864.122229] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:25 u20 kernel: [ 8864.122229] copy_to_user done!!!
+    Mar 16 07:28:25 u20 kernel: [ 8864.122240] READ: User is reading 131072 bytes
+    Mar 16 07:28:25 u20 kernel: [ 8864.122241] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:25 u20 kernel: [ 8864.122242] copy_to_user done!!!
+    Mar 16 07:28:25 u20 kernel: [ 8864.122252] READ: User is reading 131072 bytes
+    Mar 16 07:28:25 u20 kernel: [ 8864.122253] ... Calculate bytes to read 30: len (131072) (storage_len - (size_t)*off) (30) 
+    Mar 16 07:28:25 u20 kernel: [ 8864.122254] copy_to_user done!!!
+    ```
+    </details>
+
 - Although its quite complicated to prove in a VM environment on a busy workstation, the timestamps of lock and non-lock tests indicate inaccurate timer on the locked-version. This can most likely be explained by our incorrect implementation, or the busy and obsolete host machine, or a combination of both. That being said, **a large amount of callbacks seems to still wake up in time and the timer becomes more accurate over time**. The following log fractions reflect an abnormal performance period:
 
     <details>
@@ -144,6 +200,7 @@ dpkg --list | grep linux-image
 
 We need Kernel v5.8 for its support for [proc_ops](https://elixir.bootlin.com/linux/v5.8/source/include/linux/proc_fs.h#L29):
 ```bash
+sudo apt install build-essential git htop -y
 apt list linux-*image-*
 sudo apt-get install linux-image-unsigned-5.8.0-63-generic -y
 sudo apt-get install linux-headers-5.8.0-63-generic -y
@@ -162,7 +219,7 @@ gcc -g napkin_string_split.c -o nss && ./nss
 
 Test the kernel module:
 ```bash
-# Monitor kernel log in another terminal
+# Monitor kernel log in another terminal (/var/log/kern.log)
 dmesg -wH
 # or
 dmesg --time-format ctime -w
@@ -183,6 +240,7 @@ Interaction with the module:
 ```bash
 # Write to proc file:
 sudo sh -c "echo ' w1 w2 ,  w3 w4 w5' >/proc/avm_proc_file"
+sudo sh -c "echo ' w1 w2 ,  w3 w4 w5 w123456789' >/proc/avm_proc_file"
 # The module will store:
 # - the words in a linked list
 # - and also will store the raw data in the internal storage,
@@ -192,11 +250,12 @@ cat /proc/avm_proc_file
 #  w1 w2 ,  w3 w4 w5
 #  w1 w2 ,  w3 w4 w5
 #  w1 w2 ,  w3 w4 w5
-dd bs=20 count=1 status=none < /proc/avm_proc_file
+dd bs=32 count=1 status=none < /proc/avm_proc_file
 #  w1 w2 ,  w3 w4 w5
 ```
+
 ## Misc
-- Formatting with Clang format downloaded from kernel source code. Works well with `vscode` on `macOS` using `cmd + K` `cmd + F`.
+- Formatting with `.clang-format` downloaded from Linux kernel source code. Works well with `vscode` on `macOS` using `cmd + K` `cmd + F`.
 - Get tickrate: `grep 'CONFIG_HZ=' /boot/config-$(uname -r)`.
 
 

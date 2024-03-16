@@ -108,13 +108,12 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 }
 
 /**
- * Executed when proc file is write to from userspace.
+ * Executed when proc file is written to from userspace.
  * "len" includes null char
 */
 static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		     loff_t *off)
 {
-	// TODO: handle empty string
 	// struct mmap_info *info;
 	// info = filp->private_data;
 

@@ -53,18 +53,19 @@ set_new_timer:
 
 static int my_init(void)
 {
-	printk(KERN_ALERT "Demo Module loaded!");
+	printk(KERN_ALERT "Demo Module loading ...!");
 
 	sema_init(&my_semaphore, 1);
 	proc_create(PROC_FILENAME, 0, NULL, &pops);
-	printk(KERN_INFO "Proc file '%s' initialized", PROC_FILENAME);
+	printk(KERN_INFO "... proc file '%s' initialized", PROC_FILENAME);
 
 	// Initialize the timer and callback
 	timer_setup(&my_timer, my_timer_callback, 0);
 	mod_timer(&my_timer,
 		  jiffies + msecs_to_jiffies(BACKGROUND_SLEEP_INTERVAL));
-	printk(KERN_INFO "Timer initialized");
+	printk(KERN_INFO "... timer initialized");
 
+	printk(KERN_ALERT "Demo Module loaded!");
 	return 0;
 }
 

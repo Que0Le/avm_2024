@@ -7,11 +7,15 @@
 
 #define BACKGROUND_SLEEP_INTERVAL 1000
 #define MAX_TRY_ACQUIRE_LOCK 5
+// Including null char
+#define MAX_WORD_BUFF_LEN 8
 
 static unsigned char *internal_storage;
-// the current text's length that is stored internally
+// the current text's length including null char
 static size_t storage_len = 0;
+// number of extracted words
 static size_t total_word_count = 0;
+// the word-th to read from the list
 static int word_index_to_read = 0;
 
 static struct semaphore my_semaphore;
@@ -22,6 +26,7 @@ struct storage_node {
 	struct list_head list;
 };
 
+// Linked list where we store words
 static LIST_HEAD(storage_list);
 
 static int free_storage_nodes(struct list_head *lh) {
@@ -63,9 +68,24 @@ static void print_all_nodes(struct list_head *lh) {
 // 	}
 // }
 
+
+/**
+ * @brief 
+ * Extract words from a given string and store them in the linked list.
+ * Word longer than (MAX_WORD_BUFF_LEN - 1) will be truncated.
+ * This function expects no special char in the string, i.e a null char.
+ * The algorithm is simple: go through the string, mark the beginning and
+ * ending of word and copy the memory between those marks.
+ * Non-word is defined as space, comma, semi-colon, ...
+ * 
+ * @param lh struct list_head Linked list target.
+ * @param a Raw string
+ * @param n Size of string
+ * @return int Number of word extracted
+ */
 static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 {
-	char temp[128];
+	char temp[MAX_WORD_BUFF_LEN];	// debug purpose
 	int word_head = -1, word_tail = -1;
 	int slice_now = 0;
 	int count = 0;
@@ -91,19 +111,17 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 		// or we reached the end of string
 		if (slice_now || (i + 1 == n)) {
 			word_count += 1;
-			size_t len = min(127, word_tail - word_head + 1);
-			// printk(KERN_INFO "head %d tail %d", word_head,
-			//        word_tail);
+			size_t len = min(MAX_WORD_BUFF_LEN, word_tail - word_head + 1);
 			memcpy(&temp, &a[word_head], len);
 			temp[len] = '\0';
-			// printk(KERN_INFO "%s", temp);
-			//
+
+			// store data
 			struct storage_node *node = kmalloc(sizeof(*node), GFP_KERNEL);
 			if (!node) {
 				printk(KERN_ERR "Failed to allocate memory for node!");
 				return -ENOMEM;
 			}
-			node->word = kmalloc(len + 1, GFP_KERNEL);
+			node->word = kmalloc(MAX_WORD_BUFF_LEN, GFP_KERNEL);
 			if (!node->word) {
 				printk(KERN_ERR "Failed to allocate memory for word '%s'!", temp);
 				return -ENOMEM;
@@ -116,7 +134,8 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 
 			// Add node to the end of the list
 			list_add_tail(&node->list, lh);
-			//
+
+			// Get ready for next round
 			word_tail = -1;
 			word_head = -1;
 			slice_now = 0;
