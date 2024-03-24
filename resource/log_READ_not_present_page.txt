@@ -1,0 +1,70 @@
+ 
+[So Mär 24 15:10:30 2024] Timer callback (1000 ms): Word_th (3) = ### w4 ###
+[So Mär 24 15:10:31 2024] Timer callback (1000 ms): Word_th (4) = ### w5 ###
+[So Mär 24 15:10:32 2024] Timer callback (1000 ms): Word_th (5) = ### w123456 ###
+
+#### dd bs=128 count=1 status=none < /proc/avm_proc_file
+[So Mär 24 15:10:33 2024] BUG: kernel NULL pointer dereference, address: 0000000000000000
+[So Mär 24 15:10:33 2024] #PF: supervisor instruction fetch in kernel mode
+[So Mär 24 15:10:33 2024] #PF: error_code(0x0010) - not-present page
+[So Mär 24 15:10:33 2024] PGD 0 P4D 0 
+[So Mär 24 15:10:33 2024] Oops: 0010 [#1] SMP NOPTI
+[So Mär 24 15:10:33 2024] CPU: 0 PID: 2406 Comm: dd Tainted: G           OE     5.15.0-92-generic #102~20.04.1-Ubuntu
+[So Mär 24 15:10:33 2024] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1.1 04/01/2014
+[So Mär 24 15:10:33 2024] RIP: 0010:0x0
+[So Mär 24 15:10:33 2024] Code: Unable to access opcode bytes at RIP 0xffffffffffffffd6.
+[So Mär 24 15:10:33 2024] RSP: 0018:ffffb27ec1d33ec0 EFLAGS: 00010246
+[So Mär 24 15:10:33 2024] RAX: 0000000000000000 RBX: ffff922102dccb00 RCX: 0000000000000001
+[So Mär 24 15:10:33 2024] RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffff922102dccb00
+[So Mär 24 15:10:33 2024] RBP: ffffb27ec1d33ed8 R08: 0000000000000008 R09: 0000000000000000
+[So Mär 24 15:10:33 2024] R10: 0000000000000000 R11: 0000000000000000 R12: ffff92210faf4b40
+[So Mär 24 15:10:33 2024] R13: 0000000000000000 R14: ffffffffffffffea R15: ffff922102dccb00
+[So Mär 24 15:10:33 2024] FS:  00007f2cfdcd5580(0000) GS:ffff92217bc00000(0000) knlGS:0000000000000000
+[So Mär 24 15:10:33 2024] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[So Mär 24 15:10:33 2024] CR2: ffffffffffffffd6 CR3: 00000001080e8000 CR4: 0000000000350ef0
+[So Mär 24 15:10:33 2024] Call Trace:
+[So Mär 24 15:10:33 2024]  <TASK>
+[So Mär 24 15:10:33 2024]  ? show_regs.cold+0x1a/0x1f
+[So Mär 24 15:10:33 2024]  ? __die_body+0x20/0x70
+[So Mär 24 15:10:33 2024]  ? __die+0x2b/0x37
+[So Mär 24 15:10:33 2024]  ? page_fault_oops+0x136/0x2c0
+[So Mär 24 15:10:33 2024]  ? do_user_addr_fault+0x303/0x660
+[So Mär 24 15:10:33 2024]  ? do_fault+0x1e6/0x420
+[So Mär 24 15:10:33 2024]  ? exc_page_fault+0x77/0x170
+[So Mär 24 15:10:33 2024]  ? asm_exc_page_fault+0x27/0x30
+[So Mär 24 15:10:33 2024]  proc_reg_llseek+0x5f/0x80
+[So Mär 24 15:10:33 2024]  ksys_lseek+0x6c/0xc0
+[So Mär 24 15:10:33 2024]  __x64_sys_lseek+0x1a/0x20
+[So Mär 24 15:10:33 2024]  do_syscall_64+0x5c/0xc0
+[So Mär 24 15:10:33 2024]  entry_SYSCALL_64_after_hwframe+0x62/0xcc
+[So Mär 24 15:10:33 2024] RIP: 0033:0x7f2cfdbf032b
+[So Mär 24 15:10:33 2024] Code: ff ff c3 48 8b 15 65 db 0d 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb be 0f 1f 80 00 00 00 00 f3 0f 1e fa b8 08 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 05 c3 0f 1f 40 00 48 8b 15 31 db 0d 00 f7 d8
+[So Mär 24 15:10:33 2024] RSP: 002b:00007ffd039d3688 EFLAGS: 00000246 ORIG_RAX: 0000000000000008
+[So Mär 24 15:10:33 2024] RAX: ffffffffffffffda RBX: 000056293535c160 RCX: 00007f2cfdbf032b
+[So Mär 24 15:10:33 2024] RDX: 0000000000000001 RSI: 0000000000000000 RDI: 0000000000000000
+[So Mär 24 15:10:33 2024] RBP: 0000000000000000 R08: 00000000fffffffd R09: 0000000000000000
+[So Mär 24 15:10:33 2024] R10: 00007f2cfdb22c4b R11: 0000000000000246 R12: 0000000000000001
+[So Mär 24 15:10:33 2024] R13: 0000000000000000 R14: 0000000000000000 R15: 00007ffd039d38b8
+[So Mär 24 15:10:33 2024]  </TASK>
+[So Mär 24 15:10:33 2024] Modules linked in: demo_module(OE) nls_iso8859_1 intel_rapl_msr intel_rapl_common snd_hda_codec_generic ledtrig_audio kvm_amd snd_hda_intel ccp snd_intel_dspcfg snd_intel_sdw_acpi snd_hda_codec snd_hda_core snd_hwdep snd_pcm joydev input_leds kvm crct10dif_pclmul ghash_clmulni_intel aesni_intel crypto_simd snd_seq_midi cryptd qxl snd_seq_midi_event drm_ttm_helper snd_rawmidi snd_seq ttm snd_seq_device serio_raw binfmt_misc drm_kms_helper snd_timer cec snd rc_core fb_sys_fops qemu_fw_cfg syscopyarea sysfillrect sysimgblt soundcore mac_hid sch_fq_codel msr parport_pc ppdev lp parport drm pstore_blk ramoops efi_pstore reed_solomon pstore_zone virtio_rng ip_tables x_tables autofs4 hid_generic usbhid hid virtio_net ahci i2c_i801 net_failover crc32_pclmul psmouse i2c_smbus lpc_ich libahci virtio_blk failover
+[So Mär 24 15:10:33 2024] CR2: 0000000000000000
+[So Mär 24 15:10:33 2024] ---[ end trace 34cdb56f9ce00128 ]---
+[So Mär 24 15:10:33 2024] RIP: 0010:0x0
+[So Mär 24 15:10:33 2024] Code: Unable to access opcode bytes at RIP 0xffffffffffffffd6.
+[So Mär 24 15:10:33 2024] RSP: 0018:ffffb27ec1d33ec0 EFLAGS: 00010246
+[So Mär 24 15:10:33 2024] RAX: 0000000000000000 RBX: ffff922102dccb00 RCX: 0000000000000001
+[So Mär 24 15:10:33 2024] RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffff922102dccb00
+[So Mär 24 15:10:33 2024] RBP: ffffb27ec1d33ed8 R08: 0000000000000008 R09: 0000000000000000
+[So Mär 24 15:10:33 2024] R10: 0000000000000000 R11: 0000000000000000 R12: ffff92210faf4b40
+[So Mär 24 15:10:33 2024] R13: 0000000000000000 R14: ffffffffffffffea R15: ffff922102dccb00
+[So Mär 24 15:10:33 2024] FS:  00007f2cfdcd5580(0000) GS:ffff92217bc00000(0000) knlGS:0000000000000000
+[So Mär 24 15:10:33 2024] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[So Mär 24 15:10:33 2024] CR2: ffffffffffffffd6 CR3: 00000001080e8000 CR4: 0000000000350ef0
+[So Mär 24 15:10:33 2024] Timer callback (1000 ms): Word_th (0) = ### w1 ###
+[So Mär 24 15:10:35 2024] Timer callback (1000 ms): Word_th (1) = ### w2 ###
+[So Mär 24 15:10:36 2024] Timer callback (1000 ms): Word_th (2) = ### w3 ###
+[So Mär 24 15:10:37 2024] Timer callback (1000 ms): Word_th (3) = ### w4 ###
+[So Mär 24 15:10:38 2024] Timer callback (1000 ms): Word_th (4) = ### w5 ###
+[So Mär 24 15:10:39 2024] Timer callback (1000 ms): Word_th (5) = ### w123456 ###
+[So Mär 24 15:10:40 2024] Timer callback (1000 ms): Word_th (0) = ### w1 ###
+[So Mär 24 15:10:41 2024] Timer callback (1000 ms): Word_th (1) = ### w2 ###

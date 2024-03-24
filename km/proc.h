@@ -135,11 +135,12 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	// info = filp->private_data;
 
 	// TODO: we assume that no malicious char is entered
-	pr_info("WRITE: User has written %ld bytes (excluding null char) ...", len - 1);
+	pr_info("WRITE: User has written %ld bytes (excluding null char) ...",
+		len - 1);
 
 	if (mutex_lock_interruptible(&mut_all)) {
 		printk(KERN_ALERT "Failed acquiring lock for writing!!!");
-		return(-EINTR); 
+		return (-EINTR);
 	}
 	// Clean up data from last write
 	kfree(internal_storage);
@@ -147,8 +148,7 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	word_index_to_read = 0;
 	internal_storage = (unsigned char *)kmalloc(len, GFP_KERNEL);
 	if (!internal_storage) {
-		printk(KERN_ERR
-		       "Failed allocate %ld bytes for user string!!!",
+		printk(KERN_ERR "Failed allocate %ld bytes for user string!!!",
 		       len);
 		return -ENOMEM;
 	}

@@ -19,6 +19,10 @@ To have access to the data (words and raw string), a process has to acquire a lo
 
 We also implement a very simple function to extract words from raw string (`common.h->str_to_linked_list()`). This function scans the raw string and marks the beginning and end indices of each word, one by one. The end of a word is defined as the existence of certain characters, i.e. `<space>`, `,`, `;`. The  algorithm can be tested by running `gcc -g napkin_string_split.c -o nss && ./nss`. To check for mem leak: `valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose ./nss`. This implementation can be vastly improved (ASCII conversion, error checking, replacing special characters with underscores, etc.); nonetheless, it is deemed sufficient for this project.
 
+## Note 
+Initiately, we developed and tested the module on a VirtualBox VM on macOS.
+However, the same program could crash the VM on Windows or Ubuntu host.
+That problem was fixed on the latest version, although __running `dd bs=128 count=1 status=none < /proc/avm_proc_file` on VM on Ubuntu host still destabilizes the system__. See `resource/log_READ_not_present_page.txt`.
 
 A few observation while developing and testing the software:
 - The first released version was interesting: it worked perfectly fine with the VM with macOS host, but will crash the VM on the Windows (VMWare) or Ubuntu (KVM) hosts! The line that responsible for this is `pr_info("WRITE: User has written %ld bytes: %s", len - 1, buf);` in the `write` function. This line tried to print the raw buffer. The correct way is calling `copy_from_user()` and print the temporary buffer afterward. We lost lot of time trying to investigate this behavior!
@@ -80,7 +84,7 @@ A few observation while developing and testing the software:
     ```
     </details>
 
-- Although its quite complicated to prove in a VM environment on a busy workstation, the timestamps of lock and non-lock tests indicate inaccurate timer on the locked-version. This can most likely be explained by our incorrect implementation, or the busy and obsolete host machine, or a combination of both. That being said, **a large amount of callbacks seems to still wake up in time and the timer becomes more accurate over time**. The following log fractions reflect an abnormal performance period:
+- Although its quite complicated to prove, the timestamps of lock and non-lock tests indicate inaccurate timer on the locked-version. This can most likely be explained by our incorrect implementation, or the busy and obsolete host machine, or a combination of both. That being said, **a large amount of callbacks seems to still wake up in time and the timer becomes more accurate over time**. Running the program on a powerful machine also fixes the problem. The following log fractions reflect an abnormal performance period:
 
     <details>
     <summary>No lock</summary>
@@ -217,7 +221,7 @@ make
 
 # Compile and test string splitting algorithm
 gcc -g napkin_string_split.c -o nss && ./nss
-# ... or 
+# ... or
 # chmod +x cmd.sh
 ./cmd.sh nss
 ```

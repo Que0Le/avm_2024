@@ -4,7 +4,7 @@
 #include <string.h>
 
 #define MAX_WORD_BUFF_LEN 8
-#define MIN(a,b) ((a) < (b) ? a : b)
+#define MIN(a, b) ((a) < (b) ? a : b)
 
 int split_string_by_delimiters(char *a, size_t n)
 {
@@ -33,7 +33,8 @@ int split_string_by_delimiters(char *a, size_t n)
 		// or we reached the end of string
 		if (slice_now || i + 1 == n) {
 			word_count += 1;
-			size_t len = MIN(MAX_WORD_BUFF_LEN - 1, word_tail - word_head + 1);
+			size_t len = MIN(MAX_WORD_BUFF_LEN - 1,
+					 word_tail - word_head + 1);
 
 			printf("head %d tail %d\n", word_head, word_tail);
 			memset(temp, '\0', MAX_WORD_BUFF_LEN);
@@ -62,5 +63,5 @@ int main()
 
 	char s3[] = "  , word1, word2 word3 \n word4 , ";
 	printf("strlen %ld: \n###\n%s\n###\n", strlen(s3), s3);
-	split_string_by_delimiters(s3, strlen(s3));	
+	split_string_by_delimiters(s3, strlen(s3));
 }

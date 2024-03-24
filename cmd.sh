@@ -34,7 +34,7 @@ case "$1" in
         ;;
     *)
         echo "Invalid option: $1"
-        echo "Usage: $0 [option]"
+        echo "Usage: $0 [i d r w m nss]"
         exit 1
         ;;
 esac

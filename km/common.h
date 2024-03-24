@@ -23,7 +23,6 @@ static int word_index_to_read = 0;
 // static struct mutex mut_storage;
 static struct mutex mut_all;
 
-
 struct storage_node {
 	char *word;
 	int word_th;
@@ -33,21 +32,23 @@ struct storage_node {
 // Linked list where we store words
 static LIST_HEAD(storage_list);
 
-static int free_storage_nodes(struct list_head *lh) {
-    struct storage_node *entry, *tmp;
+static int free_storage_nodes(struct list_head *lh)
+{
+	struct storage_node *entry, *tmp;
 
-    // Free allocated memory and delete list nodes
-    list_for_each_entry_safe(entry, tmp, lh, list) {
+	// Free allocated memory and delete list nodes
+	list_for_each_entry_safe(entry, tmp, lh, list) {
 		if (entry->word) {
 			kfree(entry->word);
 		}
-        list_del(&entry->list);
-        kfree(entry);
-    }
+		list_del(&entry->list);
+		kfree(entry);
+	}
 	return 0;
 }
 
-static void print_all_nodes(struct list_head *lh) {
+static void print_all_nodes(struct list_head *lh)
+{
 	// Traverse the list and print the data
 	struct storage_node *entry;
 	printk(KERN_INFO "Linked list elements:");
@@ -72,7 +73,6 @@ static void print_all_nodes(struct list_head *lh) {
 // 	}
 // }
 
-
 /**
  * @brief 
  * Extract words from a given string and store them in the linked list.
@@ -89,7 +89,7 @@ static void print_all_nodes(struct list_head *lh) {
  */
 static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 {
-	char temp[MAX_WORD_BUFF_LEN];	// debug purpose
+	char temp[MAX_WORD_BUFF_LEN]; // debug purpose
 	int word_head = -1, word_tail = -1;
 	int slice_now = 0;
 	int count = 0;
@@ -116,20 +116,25 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 		if (slice_now || (i + 1 == n)) {
 			word_count += 1;
 			// minus 1 to make space for the null char
-			size_t len = min(MAX_WORD_BUFF_LEN - 1, word_tail - word_head + 1);
+			size_t len = min(MAX_WORD_BUFF_LEN - 1,
+					 word_tail - word_head + 1);
 			memset(&temp, '\0', MAX_WORD_BUFF_LEN);
 			memcpy(&temp, &a[word_head], len);
 			// temp[len - 1] = '\0';
 
 			// store data
-			struct storage_node *node = kmalloc(sizeof(*node), GFP_KERNEL);
+			struct storage_node *node =
+				kmalloc(sizeof(*node), GFP_KERNEL);
 			if (!node) {
-				printk(KERN_ERR "Failed to allocate memory for node!");
+				printk(KERN_ERR
+				       "Failed to allocate memory for node!");
 				return -ENOMEM;
 			}
 			node->word = kmalloc(MAX_WORD_BUFF_LEN, GFP_KERNEL);
 			if (!node->word) {
-				printk(KERN_ERR "Failed to allocate memory for word '%s'!", temp);
+				printk(KERN_ERR
+				       "Failed to allocate memory for word '%s'!",
+				       temp);
 				return -ENOMEM;
 			}
 			memcpy(node->word, &a[word_head], len);
