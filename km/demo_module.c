@@ -15,14 +15,17 @@ static struct timer_list my_timer;
 
 /**
  * Print word to kernel log and setup timer for next round
+ * TODO: the behavior when we get interrupted. 
+ * May be return -ERESTARTSYS instead of set_new_timer?
+ * https://stackoverflow.com/a/9576814
 */
 static void my_timer_callback(struct timer_list *t)
 {
 	struct storage_node *entry;
 	int i = 0;
 
-	if (down_interruptible(&my_semaphore)) {
-		printk(KERN_ALERT "Interrupted down_interruptible");
+	if (mutex_lock_interruptible(&mut_all)) {
+		printk(KERN_ALERT "Interrupted mutex_lock_interruptible");
 		// We couldn't acquire access to data.
 		// No big deal, just skip it this time.
 		goto set_new_timer;
@@ -43,7 +46,7 @@ static void my_timer_callback(struct timer_list *t)
 		}
 		i++;
 	}
-	up(&my_semaphore);
+	mutex_unlock(&mut_all);
 
 set_new_timer:
 	// Setup timer for next round.
@@ -55,11 +58,11 @@ static int my_init(void)
 {
 	printk(KERN_ALERT "Demo Module loading ...!");
 
-	sema_init(&my_semaphore, 1);
+	mutex_init(&mut_all);
+	printk(KERN_INFO "... mutex initialized");
 	proc_create(PROC_FILENAME, 0, NULL, &pops);
 	printk(KERN_INFO "... proc file '%s' initialized", PROC_FILENAME);
 
-	// Initialize the timer and callback
 	timer_setup(&my_timer, my_timer_callback, 0);
 	mod_timer(&my_timer,
 		  jiffies + msecs_to_jiffies(BACKGROUND_SLEEP_INTERVAL));
@@ -74,7 +77,7 @@ static void my_exit(void)
 	printk(KERN_ALERT "Module is being unloaded ...!");
 	int ret;
 	for (int i = 0; i < MAX_TRY_ACQUIRE_LOCK; i++) {
-		ret = down_interruptible(&my_semaphore);
+		ret = mutex_lock_interruptible(&mut_all);
 		if (ret) {
 			if (i + 1 == MAX_TRY_ACQUIRE_LOCK) {
 				printk(KERN_INFO
@@ -97,7 +100,8 @@ static void my_exit(void)
 	printk(KERN_INFO "... deleted timer ...");
 	kfree(internal_storage);
 	printk(KERN_INFO "... removed storage ...");
-	up(&my_semaphore);
+	mutex_destroy(&mut_all);
+	printk(KERN_INFO "... destroyed mutex ...");
 
 	printk(KERN_ALERT "Module unloaded!\n");
 }

@@ -63,6 +63,21 @@ static int mmap(struct file *filp, struct vm_area_struct *vma)
 	return 0;
 }
 
+/**
+ * The open system call sets this pointer to NULL before 
+ * calling the open method for the driver. You are free to
+ * make its own use of the field or to ignore it; you can
+ * use the field to point to allocated data, but then you 
+ * must remember to free that memory in the release method 
+ * before the file structure is destroyed by the kernel. 
+ * private_data is a useful resource for preserving state 
+ * information across system calls and is used by most of 
+ * our sample modules. (LDD3)
+ * 
+ * There are example for using this filp->private_data field
+ * https://github.com/martinezjavier/ldd3/blob/master/scull/main.c#L298
+ * however we can't afford to invest time in researching it.
+*/
 static int open(struct inode *inode, struct file *filp)
 {
 	// struct mmap_info *info;
@@ -74,6 +89,9 @@ static int open(struct inode *inode, struct file *filp)
 
 /**
  * Executed when proc file is read from by userspace
+ * TODO: loff_t *off is currently NOT used correctly!
+ *       The module behaves as intended, 
+ *       but there is no guarantee for edge cases.
 */
 static ssize_t read(struct file *filp, char __user *buf, size_t len,
 		    loff_t *off)
@@ -87,7 +105,7 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 	// TODO: cat cmd now keeps reading the file forever.
 	ssize_t ret;
 
-	if (down_interruptible(&my_semaphore)) {
+	if (mutex_lock_interruptible(&mut_all)) {
 		printk(KERN_ALERT "Interrupted down_interruptible");
 		return (-EINTR);
 	}
@@ -102,7 +120,7 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 	} else {
 		printk(KERN_INFO "copy_to_user done!!!");
 	}
-	up(&my_semaphore);
+	mutex_unlock(&mut_all);
 
 	return ret;
 }
@@ -120,7 +138,7 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	// TODO: we assume that no malicious char is entered
 	pr_info("WRITE: User has written %ld bytes (excluding null char) ...", len - 1);
 
-	if (down_interruptible(&my_semaphore)) {
+	if (mutex_lock_interruptible(&mut_all)) {
 		printk(KERN_ALERT "Failed acquiring lock for writing!!!");
 		return(-EINTR); 
 	}
@@ -139,7 +157,7 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	if (copy_from_user(internal_storage, buf, len)) {
 		printk(KERN_ERR "Failed copy_from_user!!!");
 		kfree(internal_storage);
-		up(&my_semaphore);
+		mutex_unlock(&mut_all);
 		return -EFAULT;
 	} else {
 		storage_len = len;
@@ -149,7 +167,7 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 		// Visual check
 		print_all_nodes(&storage_list);
 	}
-	up(&my_semaphore);
+	mutex_unlock(&mut_all);
 
 	return len;
 }
@@ -164,6 +182,10 @@ static int release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+/**
+ * Tagged structure initialization syntax, explained in 
+ * https://static.lwn.net/images/pdf/LDD3/ch03.pdf, page 53
+*/
 static const struct proc_ops pops = {
 	.proc_mmap = mmap,
 	.proc_open = open,

@@ -18,7 +18,7 @@ case "$1" in
         ;;
     r)
         echo "Read from proc file ..."
-        dd bs=32 count=1 status=none < /proc/avm_proc_file
+        dd bs=128 count=1 status=none < /proc/avm_proc_file
         ;;
     w)
         echo "Write to proc file ..."

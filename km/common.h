@@ -18,7 +18,11 @@ static size_t total_word_count = 0;
 // the word-th to read from the list
 static int word_index_to_read = 0;
 
-static struct semaphore my_semaphore;
+// static struct semaphore my_semaphore;
+// static struct mutex mut_proc;
+// static struct mutex mut_storage;
+static struct mutex mut_all;
+
 
 struct storage_node {
 	char *word;
