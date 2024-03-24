@@ -36,8 +36,8 @@ int split_string_by_delimiters(char *a, size_t n)
 			size_t len = MIN(MAX_WORD_BUFF_LEN - 1, word_tail - word_head + 1);
 
 			printf("head %d tail %d\n", word_head, word_tail);
-			memset(&temp, '\0', MAX_WORD_BUFF_LEN);
-			memcpy(&temp, &a[word_head], len);
+			memset(temp, '\0', MAX_WORD_BUFF_LEN);
+			memcpy(temp, &a[word_head], len);
 			printf("%s\n", temp);
 			word_tail = -1;
 			word_head = -1;

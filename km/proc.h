@@ -109,10 +109,9 @@ static ssize_t read(struct file *filp, char __user *buf, size_t len,
 		printk(KERN_ALERT "Interrupted down_interruptible");
 		return (-EINTR);
 	}
-	ret = min(len, storage_len - (size_t)*off);
-	pr_info("... Calculate bytes to read %ld: len (%ld) "
-		"(storage_len - (size_t)*off) (%ld) ",
-		ret, len, storage_len - (size_t)*off);
+	ret = min(len, storage_len);
+	pr_info("... Calculate bytes to read %ld: len (%ld) storage_len (%ld)",
+		ret, len, storage_len);
 
 	if (copy_to_user(buf, internal_storage, ret)) {
 		printk(KERN_ERR "copy_to_user failed!!!");
