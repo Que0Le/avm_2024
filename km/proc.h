@@ -118,7 +118,7 @@ static ssize_t write(struct file *filp, const char __user *buf, size_t len,
 	// info = filp->private_data;
 
 	// TODO: we assume that no malicious char is entered
-	pr_info("WRITE: User has written %ld bytes: %s", len - 1, buf);
+	pr_info("WRITE: User has written %ld bytes (excluding null char) ...", len - 1);
 
 	if (down_interruptible(&my_semaphore)) {
 		printk(KERN_ALERT "Failed acquiring lock for writing!!!");

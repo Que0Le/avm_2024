@@ -21,6 +21,7 @@ We also implement a very simple function to extract words from raw string (`comm
 
 
 A few observation while developing and testing the software:
+- The first released version was interesting: it worked perfectly fine with the VM with macOS host, but will crash the VM on the Windows (VMWare) or Ubuntu (KVM) hosts! The line that responsible for this is `pr_info("WRITE: User has written %ld bytes: %s", len - 1, buf);` in the `write` function. This line tried to print the raw buffer. The correct way is calling `copy_from_user()` and print the temporary buffer afterward. We lost lot of time trying to investigate this behavior!
 - A newline char is needed to print the last line before the module is removed. I.e: `printk(KERN_ALERT "Module unloaded!\n");`. Otherwise, that `Module unloaded!` text will only show up when another kernel log is printed! [Intersting read](https://lwn.net/Articles/732420/).
 - Expected crashes: At least 10 times the VM must be force-restarted during development. In most cases, invalid memory access was to be blamed.
 - Reading proc file with `cat` command will drive the module to the limit since the command tries to read the whole 131072 bytes at one time. This makes the module respond non-stop, each run returns 30 bytes. The locking mechanism seems to work, like in this case:
@@ -213,8 +214,12 @@ Compile software:
 ```bash
 # Compile the kernel module
 make
+
 # Compile and test string splitting algorithm
 gcc -g napkin_string_split.c -o nss && ./nss
+# ... or 
+# chmod +x cmd.sh
+./cmd.sh nss
 ```
 
 Test the kernel module:
@@ -223,17 +228,24 @@ Test the kernel module:
 dmesg -wH
 # or
 dmesg --time-format ctime -w
+# ... or 
+./cmd.sh m
 # [Fri Mar 15 12:01:41 2024] Timer callback (1000 ms): Word_th (4) = ### w5 ###
 # [Fri Mar 15 12:01:42 2024] Timer callback (1000 ms): Word_th (0) = ### w1 ###
 # [Fri Mar 15 12:01:43 2024] Timer callback (1000 ms): Word_th (1) = ### w2 ###
 
+
 # Insert module
 sudo insmod demo_module.ko
+# ... or
+./cmd.sh i
 # Inspection
 lsmod | grep demo_module 
 /sbin/modinfo demo_module.ko
 # Remove the module
 sudo rmmod demo_module.ko
+# ... or
+./cmd.sh d
 ```
 
 Interaction with the module:
@@ -241,6 +253,8 @@ Interaction with the module:
 # Write to proc file:
 sudo sh -c "echo ' w1 w2 ,  w3 w4 w5' >/proc/avm_proc_file"
 sudo sh -c "echo ' w1 w2 ,  w3 w4 w5 w123456789' >/proc/avm_proc_file"
+# ... or
+./cmd.sh w
 # The module will store:
 # - the words in a linked list
 # - and also will store the raw data in the internal storage,
@@ -251,6 +265,8 @@ cat /proc/avm_proc_file
 #  w1 w2 ,  w3 w4 w5
 #  w1 w2 ,  w3 w4 w5
 dd bs=32 count=1 status=none < /proc/avm_proc_file
+# ... or
+./cmd.sh r
 #  w1 w2 ,  w3 w4 w5
 ```
 
