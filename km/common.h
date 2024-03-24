@@ -115,9 +115,11 @@ static int str_to_linked_list(struct list_head *lh, char *a, size_t n)
 		// or we reached the end of string
 		if (slice_now || (i + 1 == n)) {
 			word_count += 1;
-			size_t len = min(MAX_WORD_BUFF_LEN, word_tail - word_head + 1);
+			// minus 1 to make space for the null char
+			size_t len = min(MAX_WORD_BUFF_LEN - 1, word_tail - word_head + 1);
+			memset(&temp, '\0', MAX_WORD_BUFF_LEN);
 			memcpy(&temp, &a[word_head], len);
-			temp[len] = '\0';
+			// temp[len - 1] = '\0';
 
 			// store data
 			struct storage_node *node = kmalloc(sizeof(*node), GFP_KERNEL);
